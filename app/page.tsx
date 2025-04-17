@@ -1,7 +1,28 @@
+'use client';
+
+import { useState } from "react";
 import TypeOfProperty from "../components/TypeOfProperty";
 import WaterConnectionSelection from "../components/WaterConnectionSelection";
 
 export default function Home() {
+  const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+
+  const handlePhotoCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Placeholder for photo processing logic
+      // Extract address, latitude, and longitude from the photo
+      const extractedAddress = "Extracted Address"; // Replace with actual logic
+      const extractedLatitude = "Extracted Latitude"; // Replace with actual logic
+      const extractedLongitude = "Extracted Longitude"; // Replace with actual logic
+
+      setAddress(extractedAddress);
+      setLatitude(extractedLatitude);
+      setLongitude(extractedLongitude);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -48,6 +69,8 @@ export default function Home() {
             <label className="block font-medium">Address</label>
             <input
               type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
               className="w-full border border-gray-300 rounded-md p-2"
               title="Enter the address"
             />
@@ -57,6 +80,8 @@ export default function Home() {
               <label className="block font-medium">Latitude</label>
               <input
                 type="text"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
                 className="w-full border border-gray-300 rounded-md p-2"
                 title="Enter the latitude"
               />
@@ -65,6 +90,8 @@ export default function Home() {
               <label className="block font-medium">Longitude</label>
               <input
                 type="text"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
                 className="w-full border border-gray-300 rounded-md p-2"
                 title="Enter the longitude"
               />
@@ -96,10 +123,21 @@ export default function Home() {
               title="Upload the water tax bill"
             />
           </div>
+          <div>
+            <label className="block font-medium">Take a Photo</label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoCapture}
+              className="w-full border border-gray-300 rounded-md p-2"
+              title="Click a photo of the property"
+            />
+          </div>
           <div className="text-center">
             <button
               type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md"
+              className="w-[80%] mt-5 bg-blue-500 text-white px-4 py-2 rounded-md"
             >
               Submit
             </button>
