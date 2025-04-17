@@ -3,7 +3,6 @@
 import { useState } from "react";
 import TypeOfProperty from "../components/TypeOfProperty";
 import WaterConnectionSelection from "../components/WaterConnectionSelection";
-import GeoCapture from "@/components/GeoCapture";
 
 export default function Home() {
   const [address, setAddress] = useState("");
