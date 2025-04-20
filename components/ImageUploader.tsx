@@ -37,7 +37,7 @@ export default function ImageUploader({
         setPreview(result);
 
         // Extract ImageMetadata data for latitude and longitude
-        ImageMetadata.getData(file, function (this:any) {
+        ImageMetadata.getData(file, function (this: any) {
           const lat = ImageMetadata.getTag(this, "GPSLatitude");
           const lng = ImageMetadata.getTag(this, "GPSLongitude");
           const latRef = ImageMetadata.getTag(this, "GPSLatitudeRef");
@@ -47,6 +47,8 @@ export default function ImageUploader({
             const latitude = convertDMSToDD(lat, latRef);
             const longitude = convertDMSToDD(lng, lngRef);
             setCoordinates({ lat: latitude, lng: longitude });
+          } else {
+            setCoordinates({ lat: "Not Available", lng: "Not Available" });
           }
         });
       };
@@ -56,6 +58,7 @@ export default function ImageUploader({
   };
 
   const convertDMSToDD = (dms: number[], ref: string): string => {
+    if (!dms || dms.length !== 3) return "Invalid Data";
     const [degrees, minutes, seconds] = dms;
     let dd = degrees + minutes / 60 + seconds / 3600;
     if (ref === "S" || ref === "W") {
@@ -63,8 +66,6 @@ export default function ImageUploader({
     }
     return dd.toFixed(6);
   };
-
-  console.log(coordinates);
 
   return (
     <div>

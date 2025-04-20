@@ -5,9 +5,7 @@ import { useState } from "react";
 export default function WaterConnectionSelection() {
   const [hasWaterConnection, setHasWaterConnection] = useState<string | null>(null);
   const [authorizedConnections, setAuthorizedConnections] = useState<number>(0);
-  const [unauthorizedConnections, setUnauthorizedConnections] = useState<number>(0);
   const [authorizedDiameters, setAuthorizedDiameters] = useState<string[]>([]);
-  const [unauthorizedDiameters, setUnauthorizedDiameters] = useState<string[]>([]);
 
   const handleDiameterChange = (
     selectedDiameters: string[],
@@ -91,55 +89,6 @@ export default function WaterConnectionSelection() {
                         handleDiameterChange(authorizedDiameters, setAuthorizedDiameters, size)
                       }
                       title={`Select diameter ${size} for authorized connections`}
-                      className="w-5 h-5" // Increased size
-                    />
-                    <span>{size}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label
-              className="block font-medium"
-              title="Select the number of unauthorized water connections"
-            >
-              No of Un-Authorized Water Connections:
-            </label>
-            <select
-              className="border rounded p-2 w-20"
-              value={unauthorizedConnections}
-              onChange={(e) => setUnauthorizedConnections(Number(e.target.value))}
-              title="Choose the number of unauthorized water connections"
-            >
-              {[0, 1, 2, 3, 4, 5].map((num) => (
-                <option key={num} value={num}>
-                  {num}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {unauthorizedConnections >= 2 && (
-            <div>
-              <label
-                className="block font-medium"
-                title="Select the diameter of unauthorized water connections"
-              >
-                Diameter of Un-Authorized Connections:
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {["0.5\"", "0.75\"", "1.0\"", "1.25\"", "1.5\"", "2\""].map((size) => (
-                  <label key={size} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      value={size}
-                      checked={unauthorizedDiameters.includes(size)}
-                      onChange={() =>
-                        handleDiameterChange(unauthorizedDiameters, setUnauthorizedDiameters, size)
-                      }
-                      title={`Select diameter ${size} for unauthorized connections`}
                       className="w-5 h-5" // Increased size
                     />
                     <span>{size}</span>
