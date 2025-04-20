@@ -37,6 +37,7 @@ export default function ImageUploader({
         setPreview(result);
 
         // Extract ImageMetadata data for latitude and longitude
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ImageMetadata.getData(file as any, function (this: any) {
           const lat = ImageMetadata.getTag(this, "GPSLatitude");
           const lng = ImageMetadata.getTag(this, "GPSLongitude");
