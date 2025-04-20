@@ -37,7 +37,7 @@ export default function ImageUploader({
         setPreview(result);
 
         // Extract ImageMetadata data for latitude and longitude
-        ImageMetadata.getData(file, function (this: any) {
+        ImageMetadata.getData(file as any, function (this: any) {
           const lat = ImageMetadata.getTag(this, "GPSLatitude");
           const lng = ImageMetadata.getTag(this, "GPSLongitude");
           const latRef = ImageMetadata.getTag(this, "GPSLatitudeRef");
@@ -73,6 +73,7 @@ export default function ImageUploader({
       <input
         type="file"
         accept={accept}
+        capture="environment"
         onChange={handleFileChange}
         className="w-full border border-gray-300 rounded-md p-2"
         title={title}

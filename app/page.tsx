@@ -7,20 +7,14 @@ import ImageUploader from "../components/ImageUploader";
 
 export default function Home() {
   const [address, setAddress] = useState("");
-  const [latitude, setLatitude] = useState("-");
-  const [longitude, setLongitude] = useState("-");
 
   const handlePhotoCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // Placeholder for photo processing logic
       const extractedAddress = "Extracted Address"; // Replace with actual logic
-      const extractedLatitude = "Extracted Latitude"; // Replace with actual logic
-      const extractedLongitude = "Extracted Longitude"; // Replace with actual logic
 
       setAddress(extractedAddress);
-      setLatitude(extractedLatitude);
-      setLongitude(extractedLongitude);
     }
   };
 
