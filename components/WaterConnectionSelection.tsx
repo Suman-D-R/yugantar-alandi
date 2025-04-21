@@ -2,21 +2,35 @@
 
 import { useState } from "react";
 
-export default function WaterConnectionSelection() {
+interface WaterConnectionSelectionProps {
+  onChange: (value: {
+    hasWaterConnection: string | null;
+    authorizedConnections: number;
+    authorizedDiameters: string[];
+  }) => void;
+}
+
+export default function WaterConnectionSelection({ onChange }: WaterConnectionSelectionProps) {
   const [hasWaterConnection, setHasWaterConnection] = useState<string | null>(null);
   const [authorizedConnections, setAuthorizedConnections] = useState<number>(0);
   const [authorizedDiameters, setAuthorizedDiameters] = useState<string[]>([]);
 
-  const handleDiameterChange = (
-    selectedDiameters: string[],
-    setDiameters: React.Dispatch<React.SetStateAction<string[]>>,
-    value: string
-  ) => {
-    if (selectedDiameters.includes(value)) {
-      setDiameters(selectedDiameters.filter((d) => d !== value));
-    } else {
-      setDiameters([...selectedDiameters, value]);
-    }
+  const handleDiameterChange = (value: string) => {
+    const updatedDiameters = authorizedDiameters.includes(value)
+      ? authorizedDiameters.filter((d) => d !== value)
+      : [...authorizedDiameters, value];
+    setAuthorizedDiameters(updatedDiameters);
+    onChange({ hasWaterConnection, authorizedConnections, authorizedDiameters: updatedDiameters });
+  };
+
+  const handleHasWaterConnectionChange = (value: string) => {
+    setHasWaterConnection(value);
+    onChange({ hasWaterConnection: value, authorizedConnections, authorizedDiameters });
+  };
+
+  const handleAuthorizedConnectionsChange = (value: number) => {
+    setAuthorizedConnections(value);
+    onChange({ hasWaterConnection, authorizedConnections: value, authorizedDiameters });
   };
 
   return (
@@ -30,7 +44,7 @@ export default function WaterConnectionSelection() {
             type="radio"
             name="water_connection"
             value="yes"
-            onChange={() => setHasWaterConnection("yes")}
+            onChange={() => handleHasWaterConnectionChange("yes")}
             title="Select 'Yes' if there is a municipal water connection"
           />
           <span>Yes</span>
@@ -40,7 +54,7 @@ export default function WaterConnectionSelection() {
             type="radio"
             name="water_connection"
             value="no"
-            onChange={() => setHasWaterConnection("no")}
+            onChange={() => handleHasWaterConnectionChange("no")}
             title="Select 'No' if there is no municipal water connection"
           />
           <span>No</span>
@@ -51,15 +65,15 @@ export default function WaterConnectionSelection() {
         <div className="mt-4 space-y-4">
           <div>
             <label
-              className="block font-medium"
+              className="block font-medium mb-1"
               title="Select the number of authorized water connections"
             >
               No of Authorized Water Connections:
             </label>
             <select
-              className="border rounded p-2 w-20"
+              className="w-full border border-gray-300 rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={authorizedConnections}
-              onChange={(e) => setAuthorizedConnections(Number(e.target.value))}
+              onChange={(e) => handleAuthorizedConnectionsChange(Number(e.target.value))}
               title="Choose the number of authorized water connections"
             >
               {[0, 1, 2, 3, 4, 5].map((num) => (
@@ -85,9 +99,7 @@ export default function WaterConnectionSelection() {
                       type="checkbox"
                       value={size}
                       checked={authorizedDiameters.includes(size)}
-                      onChange={() =>
-                        handleDiameterChange(authorizedDiameters, setAuthorizedDiameters, size)
-                      }
+                      onChange={() => handleDiameterChange(size)}
                       title={`Select diameter ${size} for authorized connections`}
                       className="w-5 h-5" // Increased size
                     />

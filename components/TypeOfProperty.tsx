@@ -2,8 +2,17 @@
 
 import React, { useState } from "react";
 
-export default function TypeOfProperty() {
+interface TypeOfPropertyProps {
+  onChange: (value: string) => void;
+}
+
+export default function TypeOfProperty({ onChange }: TypeOfPropertyProps) {
   const [propertyType, setPropertyType] = useState("");
+
+  const handleChange = (value: string) => {
+    setPropertyType(value);
+    onChange(value);
+  };
 
   return (
     <div>
@@ -12,7 +21,7 @@ export default function TypeOfProperty() {
           className="w-full border border-gray-300 rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           title="Select the type of property"
           value={propertyType}
-          onChange={(e) => setPropertyType(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
         >
           <option className="p-2" value="">Select</option>
           <option className="p-2" value="Residential">Residential</option>
