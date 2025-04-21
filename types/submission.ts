@@ -1,5 +1,5 @@
 export interface WaterConnection {
-  hasWaterConnection: string | null;
+  hasWaterConnection: boolean | null;
   authorizedConnections: number;
   authorizedDiameters: string[];
 }
@@ -10,10 +10,10 @@ export interface Submission {
   residentName: string;
   mobileNo: string;
   address: string;
-  households: number | null;
+  households: number;
   propertyType: string;
   waterConnection: WaterConnection;
-  propertyPhoto?: File | null;
-  pipelinePhoto?: File | null;
-  waterTaxBill?: File | null;
+  propertyPhoto: File | null;
+  pipelinePhoto: File | null;
+  waterTaxBill: File | null;
 }

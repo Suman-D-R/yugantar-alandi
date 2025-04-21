@@ -4,14 +4,14 @@ import { useState } from "react";
 
 interface WaterConnectionSelectionProps {
   onChange: (value: {
-    hasWaterConnection: string | null;
+    hasWaterConnection: boolean | null;
     authorizedConnections: number;
     authorizedDiameters: string[];
   }) => void;
 }
 
 export default function WaterConnectionSelection({ onChange }: WaterConnectionSelectionProps) {
-  const [hasWaterConnection, setHasWaterConnection] = useState<string | null>(null);
+  const [hasWaterConnection, setHasWaterConnection] = useState<boolean | null>(null);
   const [authorizedConnections, setAuthorizedConnections] = useState<number>(0);
   const [authorizedDiameters, setAuthorizedDiameters] = useState<string[]>([]);
 
@@ -23,7 +23,7 @@ export default function WaterConnectionSelection({ onChange }: WaterConnectionSe
     onChange({ hasWaterConnection, authorizedConnections, authorizedDiameters: updatedDiameters });
   };
 
-  const handleHasWaterConnectionChange = (value: string) => {
+  const handleHasWaterConnectionChange = (value: boolean) => {
     setHasWaterConnection(value);
     onChange({ hasWaterConnection: value, authorizedConnections, authorizedDiameters });
   };
@@ -43,8 +43,8 @@ export default function WaterConnectionSelection({ onChange }: WaterConnectionSe
           <input
             type="radio"
             name="water_connection"
-            value="yes"
-            onChange={() => handleHasWaterConnectionChange("yes")}
+            value="true"
+            onChange={() => handleHasWaterConnectionChange(true)}
             title="Select 'Yes' if there is a municipal water connection"
           />
           <span>Yes</span>
@@ -53,15 +53,15 @@ export default function WaterConnectionSelection({ onChange }: WaterConnectionSe
           <input
             type="radio"
             name="water_connection"
-            value="no"
-            onChange={() => handleHasWaterConnectionChange("no")}
+            value="false"
+            onChange={() => handleHasWaterConnectionChange(false)}
             title="Select 'No' if there is no municipal water connection"
           />
           <span>No</span>
         </label>
       </div>
 
-      {hasWaterConnection === "yes" && (
+      {hasWaterConnection === true && (
         <div className="mt-4 space-y-4">
           <div>
             <label
@@ -92,7 +92,7 @@ export default function WaterConnectionSelection({ onChange }: WaterConnectionSe
               >
                 Diameter of Authorized Connections:
               </label>
-              <div className="flex flex-wrap gap-2 ">
+              <div className="flex flex-wrap gap-2">
                 {["0.5\"", "0.75\"", "1.0\"", "1.25\"", "1.5\"", "2\""].map((size) => (
                   <label key={size} className="flex items-center space-x-2">
                     <input
@@ -101,7 +101,7 @@ export default function WaterConnectionSelection({ onChange }: WaterConnectionSe
                       checked={authorizedDiameters.includes(size)}
                       onChange={() => handleDiameterChange(size)}
                       title={`Select diameter ${size} for authorized connections`}
-                      className="w-5 h-5" // Increased size
+                      className="w-5 h-5"
                     />
                     <span>{size}</span>
                   </label>

@@ -14,20 +14,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Property {
-  id                Int      @id @default(autoincrement())
-  wardNo            String
-  houseNo           String
-  residentName      String
-  mobileNo          String
-  address           String
-  households        Int
-  propertyType      String
-  hasWaterConnection String?
-  authorizedConnections Int?
-  authorizedDiameters String[]
-  propertyPhoto     String
-  pipelinePhoto     String
-  waterTaxBill      String
-  createdAt         DateTime @default(now())
+model Submission {
+  id              Int      @id @default(autoincrement())
+  wardNo          String
+  houseNo         String
+  residentName    String
+  mobileNo        String
+  address         String
+  households      Int
+  propertyType    String
+  waterConnection Boolean
+  propertyPhoto   Bytes?
+  pipelinePhoto   Bytes?
+  waterTaxBill    Bytes?
+  createdAt       DateTime @default(now())
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Submission } from "../types/submission";
+
 import TypeOfProperty from "../components/TypeOfProperty";
 import WaterConnectionSelection from "../components/WaterConnectionSelection";
 import ImageUploader from "../components/ImageUploader";
@@ -13,10 +14,10 @@ export default function Home() {
     residentName: "",
     mobileNo: "",
     address: "",
-    households: null,
+    households: 0,
     propertyType: "",
     waterConnection: {
-      hasWaterConnection: null,
+      hasWaterConnection: false,
       authorizedConnections: 0,
       authorizedDiameters: [],
     },
@@ -31,8 +32,10 @@ export default function Home() {
     Object.entries(formData).forEach(([key, value]) => {
       if (key === "waterConnection") {
         payload.append(key, JSON.stringify(value));
+      } else if (value instanceof File) {
+        payload.append(key, value);
       } else {
-        payload.append(key, value as string | Blob);
+        payload.append(key, value as string);
       }
     });
 

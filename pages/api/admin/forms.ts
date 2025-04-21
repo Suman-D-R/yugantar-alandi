@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from '@/lib/prisma'
 import { NextApiRequest, NextApiResponse } from "next";
-
-const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
@@ -33,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const total = await prisma.property.count({ where });
 
       res.status(200).json({ forms, total });
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: "Failed to retrieve forms data" });
     }
   } else {

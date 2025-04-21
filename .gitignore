@@ -42,3 +42,9 @@ next-env.d.ts
 
 # Ignore Prisma generated client
 /app/generated/prisma/
+
+# Prisma
+/prisma/*.db
+/prisma/migrations/
+/prisma/dev.db
+/prisma/test.db
