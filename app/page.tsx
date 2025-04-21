@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from "react";
-import { Submission } from "../types/submission";
+import { SubmissionPayload } from "../types/submission"; // Use SubmissionPayload for form data
 
 import TypeOfProperty from "../components/TypeOfProperty";
 import WaterConnectionSelection from "../components/WaterConnectionSelection";
 import ImageUploader from "../components/ImageUploader";
 
 export default function Home() {
-  const [formData, setFormData] = useState<Submission>({
+  const [formData, setFormData] = useState<SubmissionPayload>({
     wardNo: "",
     houseNo: "",
     residentName: "",
@@ -26,8 +26,30 @@ export default function Home() {
     waterTaxBill: null,
   });
 
+  const [loading, setLoading] = useState(false); // Spinner state
+
+  const validateForm = () => {
+    if (!formData.wardNo || !formData.houseNo || !formData.residentName || !formData.mobileNo || !formData.address) {
+      alert("Please fill in all required fields.");
+      return false;
+    }
+    if (formData.households <= 0) {
+      alert("Households must be greater than 0.");
+      return false;
+    }
+    if (!formData.propertyType) {
+      alert("Please select a property type.");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
+    setLoading(true); // Show spinner
     const payload = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (key === "waterConnection") {
@@ -43,6 +65,8 @@ export default function Home() {
       method: "POST",
       body: payload,
     });
+
+    setLoading(false); // Hide spinner
 
     if (response.ok) {
       alert("Form submitted successfully!");
@@ -150,9 +174,38 @@ export default function Home() {
           <div className="text-center">
             <button
               type="submit"
-              className="w-full bg-blue-800 text-white font-semibold py-3 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full bg-blue-800 text-white font-semibold py-3 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={loading}
             >
-              Submit
+              {loading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Submitting...</span>
+                </div>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         </form>

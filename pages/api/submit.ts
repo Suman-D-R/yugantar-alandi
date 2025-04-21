@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import Busboy from "busboy";
+import { Upload } from "@aws-sdk/lib-storage";
+import s3Client from "@/lib/s3Client";
 import type { BusboyConfig } from "busboy";
 import type { Submission } from "@/types/submission";
 
@@ -12,6 +14,22 @@ export const config = {
 
 interface FormData {
   [key: string]: string | { filename: string; encoding: string; mimetype: string; data: Buffer };
+}
+
+async function uploadToS3(file: { data: Buffer; filename: string; mimetype: string }): Promise<string> {
+  const key = `uploads/${Date.now()}-${file.filename}`;
+  const upload = new Upload({
+    client: s3Client,
+    params: {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key,
+      Body: file.data,
+      ContentType: file.mimetype,
+    },
+  });
+
+  await upload.done();
+  return `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET_NAME}/${key}`;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -38,6 +56,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     busboy.on("finish", async () => {
       try {
+        const propertyPhotoUrl = formData.propertyPhoto
+          ? await uploadToS3(formData.propertyPhoto as { data: Buffer; filename: string; mimetype: string })
+          : null;
+
+        const pipelinePhotoUrl = formData.pipelinePhoto
+          ? await uploadToS3(formData.pipelinePhoto as { data: Buffer; filename: string; mimetype: string })
+          : null;
+
+        const waterTaxBillUrl = formData.waterTaxBill
+          ? await uploadToS3(formData.waterTaxBill as { data: Buffer; filename: string; mimetype: string })
+          : null;
+
         const submission: Submission = {
           wardNo: formData.wardNo as string,
           houseNo: formData.houseNo as string,
@@ -47,9 +77,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           households: parseInt(formData.households as string || "0", 10),
           propertyType: formData.propertyType as string,
           waterConnection: JSON.parse(formData.waterConnection as string || "{}"),
-          propertyPhoto: (formData.propertyPhoto as { data: Buffer })?.data || null,
-          pipelinePhoto: (formData.pipelinePhoto as { data: Buffer })?.data || null,
-          waterTaxBill: (formData.waterTaxBill as { data: Buffer })?.data || null,
+          propertyPhoto: propertyPhotoUrl,
+          pipelinePhoto: pipelinePhotoUrl,
+          waterTaxBill: waterTaxBillUrl,
         };
 
         const createdSubmission = await prisma.submission.create({
@@ -61,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             address: submission.address,
             households: submission.households,
             propertyType: submission.propertyType,
-            waterConnection: submission.waterConnection.hasWaterConnection,
+            waterConnection: submission.waterConnection.hasWaterConnection ?? true,
             propertyPhoto: submission.propertyPhoto,
             pipelinePhoto: submission.pipelinePhoto,
             waterTaxBill: submission.waterTaxBill,

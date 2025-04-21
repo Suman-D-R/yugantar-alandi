@@ -40,7 +40,7 @@ export default function AdminPage() {
     { field: "address", headerName: "Address", width: 200 },
     { field: "households", headerName: "Households", width: 100 },
     { field: "propertyType", headerName: "Property Type", width: 150 },
-    { field: "createdAt", headerName: "Created At", width: 150, type: "dateTime" },
+    { field: "createdAt", headerName: "Created At", width: 150, type: "dateTime", valueGetter: (params) => new Date(params.value) },
   ];
 
   return (
