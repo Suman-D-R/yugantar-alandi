@@ -55,6 +55,7 @@ export default function Home() {
       if (key === "waterConnection") {
         payload.append(key, JSON.stringify(value));
       } else if (value instanceof File) {
+        console.log("Appending file:", key, value);
         payload.append(key, value);
       } else {
         payload.append(key, value as string);

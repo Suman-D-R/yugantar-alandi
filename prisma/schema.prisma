@@ -24,8 +24,8 @@ model Submission {
   households      Int
   propertyType    String
   waterConnection Boolean
-  propertyPhoto   String? // Changed to store URL
-  pipelinePhoto   String? // Changed to store URL
-  waterTaxBill    String? // Changed to store URL
+  propertyPhoto   String? 
+  pipelinePhoto   String?
+  waterTaxBill    String?
   createdAt       DateTime @default(now())
 }

@@ -1,100 +1,115 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
-import Busboy from "busboy";
 import { Upload } from "@aws-sdk/lib-storage";
 import s3Client from "@/lib/s3Client";
-import type { BusboyConfig } from "busboy";
+import { createReadStream } from "fs";
+import formidable, { File, Fields, Files } from "formidable";
 import type { Submission } from "@/types/submission";
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // Disable Next.js body parsing to use formidable
   },
 };
 
-interface FormData {
-  [key: string]: string | { filename: string; encoding: string; mimetype: string; data: Buffer };
-}
+async function uploadToS3(file: File): Promise<string> {
+  const key = `uploads/${Date.now()}-${file.originalFilename}`;
+  const s3Endpoint = process.env.S3_ENDPOINT;
 
-async function uploadToS3(file: { data: Buffer; filename: string; mimetype: string }): Promise<string> {
-  const key = `uploads/${Date.now()}-${file.filename}`;
+  if (!s3Endpoint) {
+    throw new Error("S3_ENDPOINT environment variable is not defined.");
+  }
+
+  console.log("Uploading file to S3:", key);
+  console.log("File details:", file);
+
   const upload = new Upload({
     client: s3Client,
     params: {
-      Bucket: process.env.S3_BUCKET_NAME,
       Key: key,
-      Body: file.data,
-      ContentType: file.mimetype,
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Body: createReadStream(file.filepath),
+      ContentType: file.mimetype || "application/octet-stream",
     },
   });
 
   await upload.done();
-  return `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET_NAME}/${key}`;
+  return `${s3Endpoint}/${process.env.S3_BUCKET_NAME}/${key}`;
+}
+
+// Utility function to extract and validate a field
+function extractField(field: string | string[] | undefined): string {
+  if (Array.isArray(field)) {
+    return field[0] || "";
+  }
+  return field !== undefined ? String(field) : "";
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
-    const busboy = Busboy({ headers: req.headers } as BusboyConfig);
-    const formData: FormData = {};
+    const form = formidable({ multiples: true });
 
-    busboy.on("file", (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
-      const chunks: Buffer[] = [];
-      file.on("data", (chunk: Buffer) => chunks.push(chunk));
-      file.on("end", () => {
-        formData[fieldname] = {
-          filename,
-          encoding,
-          mimetype,
-          data: Buffer.concat(chunks),
-        };
-      });
-    });
+    form.parse(req, async (err, fields: Fields, files: Files) => {
+      if (err) {
+        console.error("Error parsing form:", err);
+        return res.status(500).json({ error: "Failed to parse form data" });
+      }
 
-    busboy.on("field", (fieldname: string, value: string) => {
-      formData[fieldname] = value;
-    });
-
-    busboy.on("finish", async () => {
       try {
-        const propertyPhotoUrl = formData.propertyPhoto
-          ? await uploadToS3(formData.propertyPhoto as { data: Buffer; filename: string; mimetype: string })
+        // Validate required fields
+        const requiredFields = ["wardNo", "houseNo", "residentName", "mobileNo", "address", "propertyType"];
+        for (const field of requiredFields) {
+          if (!extractField(fields[field])) {
+            return res.status(400).json({ error: `Missing required field: ${field}` });
+          }
+        }
+
+        const propertyPhotoUrl = files.propertyPhoto
+          ? await uploadToS3(Array.isArray(files.propertyPhoto) ? files.propertyPhoto[0] : files.propertyPhoto)
           : null;
 
-        const pipelinePhotoUrl = formData.pipelinePhoto
-          ? await uploadToS3(formData.pipelinePhoto as { data: Buffer; filename: string; mimetype: string })
+        const pipelinePhotoUrl = files.pipelinePhoto
+          ? await uploadToS3(Array.isArray(files.pipelinePhoto) ? files.pipelinePhoto[0] : files.pipelinePhoto)
           : null;
 
-        const waterTaxBillUrl = formData.waterTaxBill
-          ? await uploadToS3(formData.waterTaxBill as { data: Buffer; filename: string; mimetype: string })
+        const waterTaxBillUrl = files.waterTaxBill
+          ? await uploadToS3(Array.isArray(files.waterTaxBill) ? files.waterTaxBill[0] : files.waterTaxBill)
           : null;
 
         const submission: Submission = {
-          wardNo: formData.wardNo as string,
-          houseNo: formData.houseNo as string,
-          residentName: formData.residentName as string,
-          mobileNo: formData.mobileNo as string,
-          address: formData.address as string,
-          households: parseInt(formData.households as string || "0", 10),
-          propertyType: formData.propertyType as string,
-          waterConnection: JSON.parse(formData.waterConnection as string || "{}"),
+          wardNo: extractField(fields.wardNo),
+          houseNo: extractField(fields.houseNo),
+          residentName: extractField(fields.residentName),
+          mobileNo: extractField(fields.mobileNo),
+          address: extractField(fields.address),
+          households: parseInt(extractField(fields.households) || "0", 10),
+          propertyType: extractField(fields.propertyType),
+          waterConnection: JSON.parse(extractField(fields.waterConnection) || "{}"),
           propertyPhoto: propertyPhotoUrl,
           pipelinePhoto: pipelinePhotoUrl,
           waterTaxBill: waterTaxBillUrl,
         };
 
+        console.log("Parsed submission data:", submission);
+
+        // Validate numeric fields
+        if (isNaN(submission.households) || submission.households <= 0) {
+          return res.status(400).json({ error: "Invalid value for households. Must be a positive number." });
+        }
+
         const createdSubmission = await prisma.submission.create({
           data: {
-            wardNo: submission.wardNo,
-            houseNo: submission.houseNo,
-            residentName: submission.residentName,
-            mobileNo: submission.mobileNo,
-            address: submission.address,
-            households: submission.households,
-            propertyType: submission.propertyType,
-            waterConnection: submission.waterConnection.hasWaterConnection ?? true,
-            propertyPhoto: submission.propertyPhoto,
-            pipelinePhoto: submission.pipelinePhoto,
-            waterTaxBill: submission.waterTaxBill,
+            wardNo: extractField(fields.wardNo),
+            houseNo: extractField(fields.houseNo),
+            residentName: extractField(fields.residentName),
+            mobileNo: extractField(fields.mobileNo),
+            address: extractField(fields.address),
+            households: parseInt(extractField(fields.households) || "0", 10),
+            propertyType: extractField(fields.propertyType),
+            waterConnection: JSON.parse(extractField(fields.waterConnection) || "{}"),
+            propertyPhoto: propertyPhotoUrl,
+            pipelinePhoto: pipelinePhotoUrl,
+            waterTaxBill: waterTaxBillUrl,
           },
         });
 
@@ -104,8 +119,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(500).json({ error: "Failed to save submission" });
       }
     });
-
-    req.pipe(busboy);
   } else {
     res.status(405).json({ message: "Method not allowed" });
   }
